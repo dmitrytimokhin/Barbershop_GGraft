@@ -26,9 +26,9 @@ pyqt5
 pyqt5-qt5
 pyqt5-sip
 pysocks
-python-magic
-pytorch-fid
-pytorch-msssim
+#python-magic
+#pytorch-fid
+#pytorch-msssim
 pytz
 qdarkgraystyle
 qdarkstyle

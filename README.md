@@ -1,85 +1,76 @@
-# Barbershop: GAN-based Image Compositing using Segmentation Masks
+# Style-Your-Hair
+Official Pytorch implementation of "Style Your Hair: Latent Optimization for Pose-Invariant Hairstyle Transfer via Local-Style-Aware Hair Alignment (ECCV 2022)"
+
 ![teaser](docs/assets/teaser.png)
+![qualitative result](docs/assets/sup-qualitative.png)
+> **Style Your Hair: Latent Optimization for Pose-Invariant Hairstyle Transfer via Local-Style-Aware Hair Alignment**<br/>
+[Taewoo Kim*](https://github.com/Taeu),
+[Chaeyeon Chung*](https://github.com/ChennyTech),
+[Yoonseo Kim*](https://github.com/myoons),
+[Sunghyun Park](https://psh01087.github.io/),
+[Kangyeol Kim](https://kangyeolk.github.io/), and 
+[Jaegul Choo](https://sites.google.com/site/jaegulchoo/)<br/>
+`*` indicates equal contributions.
 
-> [**Barbershop: GAN-based Image Compositing using Segmentation Masks**](https://zpdesu.github.io/Barbershop/)<br/>
-[Peihao Zhu](https://github.com/ZPdesu),
-[Rameen Abdal](https://github.com/RameenAbdal),
-[John Femiani](https://scholar.google.com/citations?user=rS1xJIIAAAAJ&hl=en),
-[Peter Wonka](http://peterwonka.net/)<br/>
+> [arXiv](https://arxiv.org/abs/2208.07765) | [BibTeX](#bibtex) |
 
 
-> [arXiv](https://arxiv.org/abs/2106.01505) | [BibTeX](#bibtex) | [Project Page](https://zpdesu.github.io/Barbershop/) | [Video](https://youtu.be/ZU-yrAvoJfQ)
-
-
-> **Abstract** Seamlessly blending features from multiple images is extremely challenging because of complex relationships in lighting, geometry, and partial occlusion which cause coupling between different parts of the image. Even though recent work on GANs enables synthesis of realistic hair or faces, it remains difficult to combine them into a single, coherent, and plausible image rather than a disjointed set of image patches. We present a novel solution to image blending, particularly for the problem of hairstyle transfer, based on GAN-inversion. We propose a novel latent space for image blending which is better at preserving detail and encoding spatial information, and propose a new GAN-embedding algorithm which is able to slightly modify images to conform to a common segmentation mask. Our novel representation enables the transfer of the visual properties from multiple reference images including specific details such as moles and wrinkles, and because we do image blending in a latent-space  we are able to synthesize images that are coherent. Our approach avoids blending artifacts present in other approaches and finds a globally consistent image. Our results demonstrate a significant improvement over the current state of the art in a user study, with users preferring our blending solution over 95 percent of the time.
+> **Abstract** Editing hairstyle is unique and challenging due to the complexity and delicacy of hairstyle.
+Although recent approaches significantly improved the hair details, this is achieved under the assumption that a target hair and a source image are aligned.
+HairFIT, a pose-invariant hairstyle transfer model, alleviates this assumption, yet it still shows unsatisfactory quality in preserving delicate hair textures.
+To solve these limitations, we propose a high-performing pose-invariant hairstyle transfer model equipped with a latent optimization and a newly presented local-style-matching loss.
+In the StyleGAN2 latent space, we first explore a pose-aligned latent code of a target hair with the detailed textures preserved based on local-style-matching.
+Then, our model inpaints the occlusions of the source considering the aligned target hair and blends both images to produce a final output.
+The experimental results demonstrate that our model has strengths in transferring a hairstyle under higher pose differences and preserving local hairstyle textures.
 
 
 ## Description
-Official Implementation of Barbershop. **KEEP UPDATING! Please Git Pull the latest version.**
-
-## Updates
-`2021/12/27` Add dilation and erosion parameters to smooth the boundary.
-
-#### `2021/12/24` Important Update: Add semantic mask inpainting module to solve the occlusion problem. Please git pull the latest version.
-
-`2021/12/18` Add a rough version of the project.
-
-`2021/06/02` Add project page.
+Official Implementation of Style Your Hair. KEEP UPDATING! Please Git Pull the latest version.
 
 
 ## Installation
 - Clone the repository:
 ``` 
-git clone https://github.com/ZPdesu/Barbershop.git
-cd Barbershop
+git clone https://github.com/Taeu/Style-Your-Hair.git
+cd Style-Your-Hair
 ```
-- Dependencies:  
-We recommend running this repository using [Anaconda](https://docs.anaconda.com/anaconda/install/). 
-All dependencies for defining the environment are provided in `environment/environment.yaml`.
+- Install dependencies:
+```
+conda create -n {env_name} python=3.7.9
+conda activate {env_name}
+conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=11.1 -c pytorch -c conda-forge
+pip install face_alignment face-recognition gdown ipython matplotlib
+```
 
 
-## Download II2S images
-Please download the [II2S](https://drive.google.com/drive/folders/15jsR9yy_pfDHiS9aE3HcYDgwtBbAneId?usp=sharing) 
-and put them in the `input/face` folder.
-
+## Download example images
+Please download the [example images](https://drive.google.com/drive/folders/1RxzbNcKb3bPDKccyo300YXCJ8EvZSaIL?usp=sharing).
+And put the images in `./ffhq_image/` folder.
 
 ## Getting Started  
-Preprocess your own images. Please put the raw images in the `unprocessed` folder.
+
+Produce the results:
 ```
-python align_face.py
+python main.py --input_dir ./ffhq_image/ --im_path1 source.png --im_path2 target.png \
+    --output_dir ./style_your_hair_output/ \
+    --warp_loss_with_prev_list delta_w style_hair_slic_large \
+    --save_all --version final --flip_check
 ```
 
-Produce realistic results:
-```
-python main.py --im_path1 90.png --im_path2 15.png --im_path3 117.png --sign realistic --smooth 5
-```
-
-Produce results faithful to the masks:
-```
-python main.py --im_path1 90.png --im_path2 15.png --im_path3 117.png --sign fidelity --smooth 5
-```
-
-
-
-## Todo List
-* add a detailed readme
-* update mask inpainting code
-* integrate image encoder
-* add preprocessing step
-* ...
 
 ## Acknowledgments
-This code borrows heavily from [II2S](https://github.com/ZPdesu/II2S).
+This code borrows heavily from [Barbershop](https://github.com/ZPdesu/Barbershop).
 
 ## BibTeX
 
 ```
-@misc{zhu2021barbershop,
-      title={Barbershop: GAN-based Image Compositing using Segmentation Masks},
-      author={Peihao Zhu and Rameen Abdal and John Femiani and Peter Wonka},
-      year={2021},
-      eprint={2106.01505},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@article{kim2022style,
+  title={Style Your Hair: Latent Optimization for Pose-Invariant Hairstyle Transfer via Local-Style-Aware Hair Alignment},
+  author={Kim, Taewoo and Chung, Chaeyeon and Kim, Yoonseo and Park, Sunghyun and Kim, Kangyeol and Choo, Jaegul},
+  journal={arXiv preprint arXiv:2208.07765},
+  year={2022}
 }
 ```
+
+## License
+Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).

@@ -22,10 +22,17 @@ class Net(nn.Module):
             download_weight(self.opts.ckpt)
 
         print('Loading StyleGAN2 from checkpoint: {}'.format(self.opts.ckpt))
-        checkpoint = torch.load(self.opts.ckpt)
+        checkpoint = torch.load(self.opts.ckpt, map_location=self.opts.device)
         device = self.opts.device
         self.generator.load_state_dict(checkpoint['g_ema'])
-        self.latent_avg = checkpoint['latent_avg']
+        #import pdb; pdb.set_trace()
+        try:
+            self.latent_avg = checkpoint['latent_avg']
+            print(self.latent_avg.shape)
+        except:
+            print('cal latent_avg')
+            self.latent_avg = self.generator.mean_latent(4096).cpu().detach().squeeze()
+            print(self.latent_avg.shape)
         self.generator.to(device)
         self.latent_avg = self.latent_avg.to(device)
 

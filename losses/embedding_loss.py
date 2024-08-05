@@ -2,14 +2,14 @@ import torch
 from losses import lpips
 import PIL
 import os
-
+from losses.style.style_loss import StyleLoss
 
 class EmbeddingLossBuilder(torch.nn.Module):
     def __init__(self, opt):
         super(EmbeddingLossBuilder, self).__init__()
 
         self.opt = opt
-        self.parsed_loss = [[opt.l2_lambda, 'l2'], [opt.percept_lambda, 'percep']]
+        self.parsed_loss = [[opt.l2_lambda, 'l2'], [opt.percept_lambda, 'percep'], [opt.sp_hair_lambda, 'sp_hair']]
         self.l2 = torch.nn.MSELoss()
         if opt.device == 'cuda':
             use_gpu = True
@@ -19,7 +19,9 @@ class EmbeddingLossBuilder(torch.nn.Module):
         self.percept.eval()
         # self.percept = VGGLoss()
 
-
+        # style loss
+        self.style = StyleLoss(distance="l2", VGG16_ACTIVATIONS_LIST=[3, 8, 15, 22], normalize=False).to(opt.device)
+        self.style.eval()
 
 
     def _loss_l2(self, gen_im, ref_im, **kwargs):
@@ -31,13 +33,18 @@ class EmbeddingLossBuilder(torch.nn.Module):
         return self.percept(gen_im, ref_im).sum()
 
 
+    def _loss_sp_hair(self, gen_im, ref_im, sp_mask):
+        return self.style(gen_im * sp_mask, ref_im * sp_mask, mask1=sp_mask, mask2=sp_mask)
 
-    def forward(self, ref_im_H,ref_im_L, gen_im_H, gen_im_L):
+
+
+    def forward(self, ref_im_H,ref_im_L, gen_im_H, gen_im_L, sp_mask=None):
 
         loss = 0
         loss_fun_dict = {
             'l2': self._loss_l2,
             'percep': self._loss_lpips,
+            'sp_hair': self._loss_sp_hair,
         }
         losses = {}
         for weight, loss_type in self.parsed_loss:
@@ -50,6 +57,14 @@ class EmbeddingLossBuilder(torch.nn.Module):
                 var_dict = {
                     'gen_im': gen_im_L,
                     'ref_im': ref_im_L,
+                }
+            elif loss_type == 'sp_hair':
+                if weight == 0 or sp_mask is None:
+                    continue
+                var_dict = {
+                    'gen_im': gen_im_L,
+                    'ref_im': ref_im_L,
+                    'sp_mask': sp_mask,
                 }
             tmp_loss = loss_fun_dict[loss_type](**var_dict)
             losses[loss_type] = tmp_loss

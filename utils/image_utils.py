@@ -28,14 +28,19 @@ def load_image(img_path, normalize=True, downsample=False):
 
 
 
-def dilate_erosion_mask_path(im_path, seg_net, dilate_erosion=5):
+def dilate_erosion_mask_path(im_path, seg_net, dilate_erosion=5, is_downsampled=True):
     # # Mask
     # mask = Image.open(mask_path).convert("RGB")
     # mask = mask.resize((256, 256), PIL.Image.NEAREST)
     # mask = transforms.ToTensor()(mask)  # [0, 1]
 
-    IM1 = (BicubicDownSample(factor=2)(torchvision.transforms.ToTensor()(Image.open(im_path))[:3].unsqueeze(0).cuda()).clamp(
+    if is_downsampled:
+        IM1 = (BicubicDownSample(factor=2)(torchvision.transforms.ToTensor()(Image.open(im_path))[:3].unsqueeze(0).cuda()).clamp(
         0, 1) - seg_mean) / seg_std
+    else:
+        IM1 = (
+            torchvision.transforms.ToTensor()(Image.open(im_path))[:3].unsqueeze(0).cuda().clamp(
+            0, 1) - seg_mean) / seg_std
     down_seg1, _, _ = seg_net(IM1)
     mask = torch.argmax(down_seg1, dim=1).long().cpu().float()
     mask = torch.where(mask == 10, torch.ones_like(mask), torch.zeros_like(mask))

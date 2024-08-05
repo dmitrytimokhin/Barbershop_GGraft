@@ -81,7 +81,7 @@ class StyleLoss(nn.Module):
                 img.save('plot/feat_x_hat/{}.png'.format(str(idx)))
             import ipdb; ipdb.set_trace()
             """
-
+            
             # compute Gram matrix for x and x_hat
             G_x = self.gram_matrix(feat_x)
             G_x_hat = self.gram_matrix(feat_x_hat)
@@ -96,9 +96,6 @@ class StyleLoss(nn.Module):
         return loss
 
     def forward(self, x, x_hat, mask1=None, mask2=None):
-        x = x.cuda()
-        x_hat = x_hat.cuda()
-
         # resize images to 256px resolution
         N, C, H, W = x.shape
         upsample2d = nn.Upsample(
